@@ -1,0 +1,84 @@
+version: "3.8"
+
+x-backend_env: &backend_env
+  environment:
+    - DEBUG
+    - SECRET_KEY
+    - ALLOWED_HOSTS
+    - CORS_ALLOW_ALL
+    - FRONTEND_RESET_PASSWORD_REDIRECT_URL
+    - FRONTEND_VERIFY_USER_EMAIL_REDIRECT_URL
+    - EMAIL
+    - EMAIL_PASS
+    - POSTGRES_DB
+    - POSTGRES_USER
+    - POSTGRES_PASSWORD
+    - POSTGRES_HOST
+    - POSTGRES_PORT
+    - REDIS_HOST
+    - REDIS_PORT
+    - SENTRY_DSN
+
+x-postgres_env: &postgres_env
+  environment:
+    - POSTGRES_DB
+    - POSTGRES_USER
+    - POSTGRES_PASSWORD
+
+x-redis_env: &redis_env
+  environment:
+    - REDIS_HOST
+    - REDIS_PORT
+
+services:
+  backend:
+    privileged: true
+    build:
+      context: ./users
+    image: ${REGISTRY_BACKEND}
+    command: sh -c "uvicorn src.main:app --host 0.0.0.0 --port 4000 --reload"
+    volumes:
+      - "./users:/app"
+    <<: *backend_env
+    depends_on:
+      - postgres
+      - redis
+    ports:
+      - "4000:4000"
+
+  postgres:
+    image: postgres:12.3-alpine
+    volumes:
+      - ./pg_data:/var/lib/postgresql/data
+    <<: *postgres_env
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:6.0-alpine
+    restart: always
+    <<: *redis_env
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+  
+  celeryworker:
+    build:
+      context: ./users
+    image: ${REGISTRY_BACKEND}
+    command: celery -A src.core.celery worker -l info
+    volumes:
+      - "./users:/app"
+    <<: *backend_env
+    depends_on:
+      - redis
+      - backend
+
+volumes:
+  redis_data:
