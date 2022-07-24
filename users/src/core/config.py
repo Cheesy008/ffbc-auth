@@ -1,4 +1,9 @@
+import os
+from pathlib import Path
+
 from pydantic import BaseSettings, PostgresDsn, validator
+
+BASE_DIR = Path(__file__).resolve().parent.parent
 
 
 class Settings(BaseSettings):
@@ -11,9 +16,12 @@ class Settings(BaseSettings):
     REDIS_HOST: str
     REDIS_PORT: str
 
+    ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 15
     REFRESH_TOKEN_EXPIRE_MINUTES: int = 20
     SECRET_KEY: str = "secret"
+    BASE_DIR: Path = BASE_DIR
+    MEDIA_ROOT: str = os.path.join(BASE_DIR, "mediafiles")
 
     @validator("SQLALCHEMY_DATABASE_URI", pre=True)
     def assemble_db_connection(cls, v, values):

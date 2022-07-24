@@ -17,7 +17,9 @@ RUN apk add --no-cache \
     git `# для установки зависимостей из git` \
     libpq `# для psycopg2` \
     libjpeg-turbo zlib libffi cairo libwebp `# для pillow` \
-    libxml2 libxslt-dev
+    libxml2 libxslt-dev \
+    cargo\
+    rust
 RUN pip3 install --no-cache-dir cryptography
 RUN pip3 install poetry
 COPY poetry.lock pyproject.toml /app/

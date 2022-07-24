@@ -34,7 +34,7 @@ class JWTEncoder:
         return TokenPayloadDict(user_id=self.user_id, token_type=self.token_type, exp=exp, jti=jti)
 
     def _encode_payload(self) -> str:
-        encoded_jwt = jwt.encode(self.payload, settings.SECRET_KEY, algorithm=ALGORITHM)
+        encoded_jwt = jwt.encode(self.payload, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
         return encoded_jwt
 
     def _save_token_to_db(self, token: str):
@@ -60,5 +60,5 @@ class AccessToken(JWTEncoder):
 
 
 class RefreshToken(JWTEncoder):
-    token_type = TokenType.ACCESS
+    token_type = TokenType.REFRESH
     lifetime = settings.REFRESH_TOKEN_EXPIRE_MINUTES
